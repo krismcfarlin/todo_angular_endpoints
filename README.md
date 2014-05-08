@@ -1,25 +1,25 @@
 This is a permenant record of my exploration of angular with google end points.  Hopefully others will learn from my mistakes, or when I look back at this in a few months this will help jump start the process.
 Ok lets go out and get everything we need.  
 
-I.  Setup
+I.Setup
 
-1. https://github.com/coto/gae-boilerplate
+  1. https://github.com/coto/gae-boilerplate
 Read the readme ad follow the instruction on how to setup your machine and get it up and running.  I realize this is overkill for a quick little project, but who knows maybe I will add to this project in the future. ;)
 
-2. https://github.com/GoogleCloudPlatform/endpoints-proto-datastore .   Go clone that project as well, as it will help with writting our endpoints.  Take a look at the examples directory.
+  2. https://github.com/GoogleCloudPlatform/endpoints-proto-datastore .   Go clone that project as well, as it will help with writting our endpoints.  Take a look at the examples directory.
 
-copy the endpoints_proto_datastore into the root of your project directory.
+     copy the endpoints_proto_datastore into the root of your project directory.
 
-3. https://github.com/tastejs/todomvc.git .  Go clone that project as we will need the  directory as a starting point.
+  3.  https://github.com/tastejs/todomvc.git .  Go clone that project as we will need the  directory as a starting point.
 
 
-II.  Setup Model
+II.Setup Model
 
-1.  We need to set up the model for storing the data from the website.  This is done very easily using the endpoints_porot_datastore
+  1. We need to set up the model for storing the data from the website.  This is done very easily using the endpoints_porot_datastore
 
-Go into your project and  look in the bp_content folder(where all you content should go) and find the themes directory.  The project would prefer you to create a new theme for your project under this folder and use the default as an example.  I prefer to just use the default!  Under bp_content/themese/default/handlers you will find the model.py file which will contain the models for this project.
+    Go into your project and  look in the bp_content folder(where all you content should go) and find the themes directory. The project would prefer you to create a new theme for your project under this folder and use the default as an example.  I prefer to just use the default!  Under bp_content/themese/default/handlers you will find the model.py file which will contain the models for this project.
 
-I am going to put:
+    I am going to put:
 
     from endpoints_proto_datastore.ndb import EndpointsModel
     from google.appengine.ext import ndb
@@ -30,182 +30,182 @@ I am going to put:
       done = ndb.BooleanProperty()
       created = ndb.DateTimeProperty(auto_now_add=True)
 
-a.  I am including the EndpointsModel from our second project and the standard ndb models from google. I am going to add three fields to the db.
+  2. I am including the EndpointsModel from our second project and the standard ndb models from google. I am going to add three fields to the db.
 
-	text	:  to hold what I am going to do
- 	done	:  a boolean to hold if it is done
-	created	:  a date when it was created so I can see how much I procrastinate
+       	text		:  to hold what I am going to do
+ 	   	done		:  a boolean to hold if it is done
+	   	created		:  a date when it was created so I can see how much I procrastinate
 
-b.  Also notice the _message_fields_schema, this set which fields are outputed in your calls.
+  3.  Also notice the _message_fields_schema, this set which fields are outputed in your calls.
 
-III.  Setup Service
-1.  Open up the app.yaml file.  
+III.Setup Service
+
+  1.  Open up the app.yaml file.  
 	a.  Find the handlers section and make it look like this:
-	handlers:
-	- url: /_ah/spi/.*
-	  script: services.application	
-	...
-	more handlers here, don't change.
-	...
+			handlers:
+			- url: /_ah/spi/.*
+	  		  script: services.application	
+	          ...
+	          more handlers here, don't change.
+	          ...
 	b.  For handling the todomvc java/css you need to add some more handlers
-	- url: /js/(.*\.js)$
-          mime_type: text/javascript
-          static_files: bp_content/themes/default/static/js/\1
-          upload: bp_content/themes/default/static/js/(.*\.js)$
+			- url: /js/(.*\.js)$
+              mime_type: text/javascript
+          	  static_files: bp_content/themes/default/static/js/\1
+          	  upload: bp_content/themes/default/static/js/(.*\.js)$
 
-	- url: /bower_components
-  	  static_dir: bp_content/themes/default/static/js/bower_components
+			- url: /bower_components
+  	  		  static_dir: bp_content/themes/default/static/js/bower_components
 
 	b.  Find the libraries section and add
-	- name: endpoints
-  	  version: "latest"
+			- name: endpoints
+  	  		  version: "latest"
+
+  2.  Create a new Service services.py in the root of your project folder.  
 
 
-2.  Create a new Service services.py in the root of your project folder.  
 
-
-its going to look like this
-
-    import endpoints
-    from bp_content.themes.default.handlers.models import *
-    from protorpc import remote
+    	import endpoints
+    	from bp_content.themes.default.handlers.models import *
+    	from protorpc import remote
     
-    @endpoints.api(name='todoapi', version='v1', description='Todo API')
-    class TodoModelApi(remote.Service):
+    	@endpoints.api(name='todoapi', version='v1', description='Todo API')
+    	class TodoModelApi(remote.Service):
     
-      @TodoModel.method(request_fields=('id','text','done'),path='todo', http_method='POST', name='todo.insert')
-      def Insert(self, my_model):
-          my_model.put()
-          return my_model
+      	@TodoModel.method(request_fields=('id','text','done'),path='todo', http_method='POST', name='todo.insert')
+      	def Insert(self, my_model):
+        	my_model.put()
+          	return my_model
     
-      @TodoModel.method(request_fields=('id',),path='todo/{id}', http_method='DELETE', name='todo.delete')
-      def Delete(self,my_model):
-          ndb.delete_multi([my_model.key])
-          return my_model
+      	@TodoModel.method(request_fields=('id',),path='todo/{id}', http_method='DELETE', name='todo.delete')
+      	def Delete(self,my_model):
+        	ndb.delete_multi([my_model.key])
+          	return my_model
     
-      @TodoModel.method(request_fields=('id',), path='todo/{id}', http_method='GET', name='todo.get')
-      def Get(self, my_model):
-        if not my_model.from_datastore:
-          raise endpoints.NotFoundException('MyModel not found.')
-        return my_model
+      	@TodoModel.method(request_fields=('id',), path='todo/{id}', http_method='GET', name='todo.get')
+      	def Get(self, my_model):
+        	if not my_model.from_datastore:
+          	raise endpoints.NotFoundException('MyModel not found.')
+        	return my_model
     
-      @TodoModel.query_method(query_fields=('text','limit', 'order', 'pageToken'),path='todo', name='todo.list')
-      def List(self, query):
-        return query
+      	@TodoModel.query_method(query_fields=('text','limit', 'order', 'pageToken'),path='todo', name='todo.list')
+      	def List(self, query):
+        	return query
     
     
-    application = endpoints.api_server([TodoModelApi], restricted=False)
+    	application = endpoints.api_server([TodoModelApi], restricted=False)
 
 
 
 Lets go over this:
-a.  Import everything we need from the endpoints libraries  
 
-    import endpoints
-    from protorpc import remote
+  a.  Import everything we need from the endpoints libraries  
 
-b.  Import the model we created earlier
+    	import endpoints
+    	from protorpc import remote
 
-    from bp_content.themes.default.handlers.models import *
+  b.  Import the model we created earlier
 
-c.  Create a Api named todoapi with a version of v1 and a description of 'Todo API'.
+    	from bp_content.themes.default.handlers.models import *
 
-    @endpoints.api(name='todoapi', version='v1', description='Todo API')
-    class TodoModelApi(remote.Service):
+  c.  Create a Api named todoapi with a version of v1 and a description of 'Todo API'.
+
+    	@endpoints.api(name='todoapi', version='v1', description='Todo API')
+    	class TodoModelApi(remote.Service):
 
 
-d.  Create a method that can take 'id','text','done' as a request parameter.  The path of the request will be todo and can only be a POST.   It has a name of todo.insert.
+  d.  Create a method that can take 'id','text','done' as a request parameter.  The path of the request will be todo and can only be a POST.   It has a name of todo.insert.
     
-      @TodoModel.method(request_fields=('id','text','done'),path='todo', http_method='POST', name='todo.insert')
-      def Insert(self, my_model):
+  		@TodoModel.method(request_fields=('id','text','done'),path='todo', http_method='POST', name='todo.insert')
+      	def Insert(self, my_model):
 
-e.  The library automagically fills out the model with id, text and done that were sent and is put below and return a json representation of this model.
+  e.  The library automagically fills out the model with id, text and done that were sent and is put below and return a json representation of this model.
 
-      my_model.put()
-      return my_model
+		my_model.put()
+		return my_model
 
-f.  Notice the path includes a id which needs to be sent when deleting a entry.  Also the http_method must be a DELETE
+  f.  Notice the path includes a id which needs to be sent when deleting a entry.  Also the http_method must be a DELETE
 
-      @TodoModel.method(request_fields=('id',),path='todo/{id}', http_method='DELETE', name='todo.delete')
-      def Delete(self,my_model):
+		@TodoModel.method(request_fields=('id',),path='todo/{id}', http_method='DELETE', name='todo.delete')
+      	def Delete(self,my_model):
           ndb.delete_multi([my_model.key])
           return my_model
 
-g.  Notice that a get that include an id in the path returns a signle entry.   Also the http_method must be a GET
+  g.  Notice that a get that include an id in the path returns a signle entry.   Also the http_method must be a GET
 
-      @TodoModel.method(request_fields=('id',), path='todo/{id}', http_method='GET', name='todo.get')
-      def Get(self, my_model):
-        if not my_model.from_datastore:
-          raise endpoints.NotFoundException('MyModel not found.')
-        return my_model
-h.  Notice that a get that doesn't include an id will list all entries in the db.
+      	@TodoModel.method(request_fields=('id',), path='todo/{id}', http_method='GET', name='todo.get')
+      	def Get(self, my_model):
+        	if not my_model.from_datastore:
+          	raise endpoints.NotFoundException('MyModel not found.')
+        	return my_model
+  h.  Notice that a get that doesn't include an id will list all entries in the db.
 
-      @TodoModel.query_method(query_fields=('text','limit', 'order', 'pageToken'),path='todo', name='todo.list')
-      def List(self, query):
-        return query
-    application = endpoints.api_server([TodoModelApi], restricted=False)
+      	@TodoModel.query_method(query_fields=('text','limit', 'order', 'pageToken'),path='todo', name='todo.list')
+      	def List(self, query):
+        	return query
+    	application = endpoints.api_server([TodoModelApi], restricted=False)
 
 
 
-3.  Experimenting With what we have built.  Please run the application and point your browser and the local url/port .  In my case it is localhost:8080/_ah/api/explorer.  This should take you to GAE api explorer.  From here we will be able to test out that our api is working correctly.   
+  3.  Experimenting With what we have built.  Please run the application and point your browser and the local url/port .  In my case it is localhost:8080/_ah/api/explorer.  This should take you to GAE api explorer.  From here we will be able to test out that our api is working correctly.   
 
-a.  Go down and click the insert function then file out the form as per the picture below.
-b.  Notice that a request was generated for you
+    a.  Go down and click the insert function then file out the form as per the picture below.
+    b.  Notice that a request was generated for you
 
-    Http://localhost:8080/_ah/api/todoapi/v1/todo POST 
-    Content-Type: application / json 
-    X-JavaScript-User-Agent: Google APIs Explorer
+    		Http://localhost:8080/_ah/api/todoapi/v1/todo POST 
+    		Content-Type: application / json 
+    		X-JavaScript-User-Agent: Google APIs Explorer
      
-    {
-    "Text": "clean my shoes" ,
-    "Done": true
-    }
+    		{
+    		"Text": "clean my shoes" ,
+    		"Done": true
+    		}
  
 
-c.  Notice that a response was returned.
+	c.  Notice that a response was returned.
 
      
-    200 OK
+    		200 OK
      
-    - Show headers -
+    		- Show headers -
       
-    {
-    "Created": "2014-05-01T21: 40:12.045030" ,
-    "Done": true ,
-    "Id": "6192449487634432" ,
-    "Text": "clean my shoes"
-    }
+    		{
+    		"Created": "2014-05-01T21: 40:12.045030" ,
+    		"Done": true ,
+    		"Id": "6192449487634432" ,
+    		"Text": "clean my shoes"
+    		}
 
-d.  Now try out the list function  
+    d.  Now try out the list function  
 
-You should get back something that looks like this.  Maybe not as many as I was adding todos.
+        You should get back something that looks like this.  Maybe not as many as I was adding todos.
 
  
-    200 OK
+    		200 OK
      
-    - Show headers -
+    		- Show headers -
       
-    {
-     "Items": [
-      {
-       "Created": "2014-05-01T21: 40:01.191850" ,
-       "Done": false ,
-       "Id": "5066549580791808" ,
-       "Text": "clean my shoes"
-      },
-      {
-       "Created": "2014-05-01T21: 38:44.942546" ,
-       "Id": "5629499534213120" ,
-       "Text": "clean my shoes"
-      },
-      {
-       "Created": "2014-05-01T21: 40:12.045030" ,
-       "Done": true ,
-       "Id": "6192449487634432" ,
-       "Text": "clean my shoes"
-      }
-     ]
-    }
+    		{
+     			"Items": [
+      			{
+       				"Created": "2014-05-01T21: 40:01.191850" ,
+       				"Done": false ,
+       				"Id": "5066549580791808" ,
+       				"Text": "clean my shoes"
+      			},
+      			{
+       				"Created": "2014-05-01T21: 38:44.942546" ,
+       				"Id": "5629499534213120" ,
+       				"Text": "clean my shoes"
+      			},
+      			{
+       				"Created": "2014-05-01T21: 40:12.045030" ,
+       				"Done": true ,
+       				"Id": "6192449487634432" ,
+       				"Text": "clean my shoes"
+      			}
+     			]
+    		}
 
 
 Go experiment with a couple of the other functions.
@@ -216,31 +216,31 @@ IV.  Onto the client side.
 
 1. Setup the index.html file. Copy the index file from template folder over to the bp_content/themes/default/templates directory.  We will need to make a modification to this file as the templating from GAE boilerplate doesn't play well with angular.  At the top of the file add {% raw %} and at the bottom add {% endraw %}
 
-Change the html section to read:
+	Change the html section to read:
 
-    <html lang="en" ng-app="todomvc">
+    	<html lang="en" ng-app="todomvc">
 
-After the <head>  add:
+	After the <head>  add:
 
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-resource.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+    	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.js"></script>
+    	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-resource.js"></script>
+    	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
 
-Change the body tag to:
+	Change the body tag to:
     
-    <body ng-controller="TodoCtrl">
+    	<body ng-controller="TodoCtrl">
 	
-Change in the <section id="todoapp" ...
+	Change in the <section id="todoapp" ...
     
-    <header id="header">
-    	<h1>todos</h1>
-    	<form id="todo-form" ng-submit="addTodo()">
-    	<input id="new-todo" placeholder="What needs to be done?" ng-model="newTodo" autofocus>
-    	</form>
-    </header>
+    	<header id="header">
+    		<h1>todos</h1>
+    		<form id="todo-form" ng-submit="addTodo()">
+    			<input id="new-todo" placeholder="What needs to be done?" ng-model="newTodo" autofocus>
+    		</form>
+    	</header>
 Change in the <section id = "main"
 
-    <section id="main"  ng-show="todos.length" ng-cloak>
+    	<section id="main"  ng-show="todos.length" ng-cloak>
     	<input id="toggle-all" type="checkbox" ng-model="allChecked" ng-click="markAll(allChecked)">
     	<label for="toggle-all">Mark all as complete</label>
     	<ul id="todo-list">
@@ -255,105 +255,102 @@ Change in the <section id = "main"
     		</form>
     		</li>
     	</ul>
-    </section>
+    	</section>
 
-Change in the footer id = "footer"
+	Change in the footer id = "footer"
 
-    <footer id="footer"  ng-show="todos.length" ng-cloak>
-    <span id="todo-count"><strong>{{remaining()}}</strong>
-    	<ng-pluralize count="remaining()" when="{ one: 'item left', other: 'items left' }"></ng-pluralize>
-    </span>
-    <button id="clear-completed" ng-click="clearCompletedTodos()" ng-show="completedCount()">Clear completed ({{completedCount()}})</button>
-    </footer>
+    	<footer id="footer"  ng-show="todos.length" ng-cloak>
+    	<span id="todo-count"><strong>{{remaining()}}</strong>
+    		<ng-pluralize count="remaining()" when="{ one: 'item left', other: 'items left' }"></ng-pluralize>
+    	</span>
+    	<button id="clear-completed" ng-click="clearCompletedTodos()" ng-show="completedCount()">Clear completed ({{completedCount()}})</button>
+    	</footer>
 
-Add to the bottom of the scripts section at the bottom:
-    <script src="js/controllers/todoCtrl.js"></script>
+	Add to the bottom of the scripts section at the bottom:
+    			
+    	<script src="js/controllers/todoCtrl.js"></script>
 
 2.  Now lets create the file js/controllers/todoCtrl.js and put the following code inside of the file:
     
-    var app = angular.module('todomvc',["ngResource"]);
+    	var app = angular.module('todomvc',["ngResource"]);
     
-    app.factory('todoFactory', function($resource) {
-        var apiRoot='//' + window.location.host + '/_ah/api/todoapi/v1/todo/:id';
-        return $resource(apiRoot,
-            {'update': {method: 'PUT'}},
-            {'query':  {method:'GET', isArray:true,
-                transformResponse: function(data, headers){
-                    console.log(data);
-                    return JSON.parse(data)['items'];
-                }
-            }}
+    	app.factory('todoFactory', function($resource) {
+        	var apiRoot='//' + window.location.host + '/_ah/api/todoapi/v1/todo/:id';
+        	return $resource(apiRoot,
+            	{'update': {method: 'PUT'}},
+            	{'query':  {method:'GET', isArray:true,
+                	transformResponse: function(data, headers){
+                    	return JSON.parse(data)['items'];
+                	}
+            	}}
+        	);
+    	});
     
-        );
-    });
+    	app.controller('TodoCtrl',function($scope,todoFactory){
+      		$scope.todos = [];
+      		$scope.newTodo = '';
+      		$scope.remaining = function() {
+        		var count = 0;
+        		angular.forEach($scope.todos, function(todo) {
+          			count += todo.done ? 0 : 1;
+        		});
+        		return count;
+      		};
+      		$scope.completedCount = function(){
+          		return $scope.todos.length - $scope.remaining();
+      		}
+      		$scope.allChecked = false;
     
-    app.controller('TodoCtrl',function($scope,todoFactory){
-      $scope.todos = [];
-      $scope.newTodo = '';
-      $scope.remaining = function() {
-        var count = 0;
-        angular.forEach($scope.todos, function(todo) {
-          count += todo.done ? 0 : 1;
-        });
-        return count;
-      };
-      $scope.completedCount = function(){
-          return $scope.todos.length - $scope.remaining();
-      }
-      $scope.allChecked = false;
+      		$scope.loadTodos = function() {
+            	$scope.todos = todoFactory.query();
+      		}
     
-      $scope.loadTodos = function() {
-            $scope.todos = todoFactory.query();
-      }
-    
-      $scope.change = function(item){
-          item.$save();
-      }
-    
-      $scope.removeTodo = function(item){
-          todoFactory.delete({ id: item.id });
-          $scope.todos=_.filter($scope.todos,function(it){
-             return it != item;
-          });
-      }
+      		$scope.change = function(item){
+          		item.$save();
+      		}
+      		$scope.removeTodo = function(item){
+          		todoFactory.delete({ id: item.id });
+          		$scope.todos=_.filter($scope.todos,function(it){
+             		return it != item;
+          		});
+      		}
 
-      $scope.addTodo = function() {
-        var newTodo = new todoFactory({text:$scope.newTodo, done:false});
-        newTodo.$save();
+      		$scope.addTodo = function() {
+        		var newTodo = new todoFactory({text:$scope.newTodo, done:false});
+        		newTodo.$save();
     
-        $scope.todos.push(newTodo);
-        $scope.newTodo = '';
-      };
+        		$scope.todos.push(newTodo);
+        		$scope.newTodo = '';
+      		};
 
 
-        $scope.doneEditing = function (todo) {
-            $scope.editedTodo = null;
-            todo.text = todo.text.trim();
-            $scope.change(todo);
-            if (!todo.text) {
+        	$scope.doneEditing = function (todo) {
+            	$scope.editedTodo = null;
+            	todo.text = todo.text.trim();
+            	$scope.change(todo);
+            	if (!todo.text) {
                     $scope.removeTodo(todo);
-            }
-        };
+            	}
+        	};
 
 
-    $scope.editTodo = function (todo) {
-        $scope.editedTodo = todo;
-        // Clone the original todo to restore it on demand.
-        $scope.originalTodo = angular.extend({}, todo);
-    };
+    		$scope.editTodo = function (todo) {
+        		$scope.editedTodo = todo;
+        		// Clone the original todo to restore it on demand.
+        		$scope.originalTodo = angular.extend({}, todo);
+    		};
 
-    $scope.markAll = function (completed) {
-        $scope.todos.forEach(function (todo) {
-                todo.done = !completed;
+    		$scope.markAll = function (completed) {
+        		$scope.todos.forEach(function (todo) {
+                	todo.done = !completed;
+                	$scope.change(todo);
+        		});
+    		};
 
-                $scope.change(todo);
-        });
-    };
-
-        $scope.clearCompletedTodos = function () {
-            $scope.todos.forEach(function(todo){
-               console.log(todo);
-               if (todo.done){
+        	$scope.clearCompletedTodos = function () {
+            	$scope.todos.forEach(function(todo){
+               	console.log(todo);
+               	if (todo.done){
                     todoFactory.delete({ id: todo.id });
                     $scope.todos=_.filter($scope.todos,function(it){
                         return it != todo;
@@ -364,7 +361,7 @@ Add to the bottom of the scripts section at the bottom:
     
         $scope.loadTodos();
     
-    });
+    	});
 
 Here the "todomvc" must have the same name as used in the index.html file in the html section ng-app="todomvc".
 The ngResource will help us make a rest service.  To read more about this https://docs.angularjs.org/api/ngResource/service/$resource
@@ -502,25 +499,24 @@ This function loops through all the todos and deletes the ones that are done.
 
 
 3.   Finish hooking up the index file.  
-a.  In the bp_content/themes/default/handlers/handlers.py file add
+  a.  In the bp_content/themes/default/handlers/handlers.py file add
 
 
-    class TestAngular(BaseHandler):
+    	class TestAngular(BaseHandler):
         def get(self,**kwargs):
             params = {
             }
             return self.render_template('index.html', **params)
 
-b.  in the bp_content/themes/default/routes/__init__.py file add the following route
+  b.  in the bp_content/themes/default/routes/__init__.py file add the following route
 
-    RedirectRoute('/', handlers.TestAngular, name='home', strict_slash=True)
+    	RedirectRoute('/', handlers.TestAngular, name='home', strict_slash=True)
 
-c.  in the bp_includes/routes.py file comment out the home route
-    #RedirectRoute('/', handlers.HomeRequestHandler, name='home', strict_slash=True)
+  c.  in the bp_includes/routes.py file comment out the home route
+    	#RedirectRoute('/', handlers.HomeRequestHandler, name='home', strict_slash=True)
 
 
 Voila!  We are done, and have a great example of google endpoints being used to supply data to an angular front end.
-
 
 
 
