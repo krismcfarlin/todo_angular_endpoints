@@ -21,80 +21,90 @@ II.Setup Model
 
     I am going to put:
 
+    ```python
     from endpoints_proto_datastore.ndb import EndpointsModel
     from google.appengine.ext import ndb
     
     class TodoModel(EndpointsModel):
-      _message_fields_schema = ('id', 'text','done', 'created')
-      text = ndb.StringProperty()
-      done = ndb.BooleanProperty()
-      created = ndb.DateTimeProperty(auto_now_add=True)
-
+        _message_fields_schema = ('id', 'text','done', 'created')
+        text = ndb.StringProperty()
+        done = ndb.BooleanProperty()
+        created = ndb.DateTimeProperty(auto_now_add=True)
+    ```
   2. I am including the EndpointsModel from our second project and the standard ndb models from google. I am going to add three fields to the db.
 
        	text		:  to hold what I am going to do
  	   	done		:  a boolean to hold if it is done
 	   	created		:  a date when it was created so I can see how much I procrastinate
 
-  3.  Also notice the _message_fields_schema, this set which fields are outputed in your calls.
+  3.  Also notice the _message_fields_schema, this set which fields are outputted in your calls.
 
 III.Setup Service
 
   1.  Open up the app.yaml file.  
-	a.  Find the handlers section and make it look like this:
-			handlers:
-			- url: /_ah/spi/.*
-	  		  script: services.application	
-	          ...
-	          more handlers here, don't change.
-	          ...
+	a.  Find the handlers section and make it look like this:	
+	    
+	```yaml
+	handlers:
+        - url: /_ah/spi/.*
+	        script: services.application	
+	        ...
+	        more handlers here, don't change.
+	        ...
+	```
+	        
 	b.  For handling the todomvc java/css you need to add some more handlers
-			- url: /js/(.*\.js)$
-              mime_type: text/javascript
-          	  static_files: bp_content/themes/default/static/js/\1
-          	  upload: bp_content/themes/default/static/js/(.*\.js)$
+	```yaml
+		- url: /js/(.*\.js)$
+          mime_type: text/javascript
+          static_files: bp_content/themes/default/static/js/\1
+          upload: bp_content/themes/default/static/js/(.*\.js)$
 
-			- url: /bower_components
-  	  		  static_dir: bp_content/themes/default/static/js/bower_components
-
+		- url: /bower_components
+  	  	  static_dir: bp_content/themes/default/static/js/bower_components
+    ```
+    
 	b.  Find the libraries section and add
-			- name: endpoints
-  	  		  version: "latest"
-
+	
+	```yaml
+	- name: endpoints
+  	  version: "latest"
+    ```
+  
   2.  Create a new Service services.py in the root of your project folder.  
 
 
+  ```python
+	import endpoints
+	from bp_content.themes.default.handlers.models import *
+	from protorpc import remote
 
-    	import endpoints
-    	from bp_content.themes.default.handlers.models import *
-    	from protorpc import remote
-    
-    	@endpoints.api(name='todoapi', version='v1', description='Todo API')
-    	class TodoModelApi(remote.Service):
-    
-      	@TodoModel.method(request_fields=('id','text','done'),path='todo', http_method='POST', name='todo.insert')
-      	def Insert(self, my_model):
-        	my_model.put()
-          	return my_model
-    
-      	@TodoModel.method(request_fields=('id',),path='todo/{id}', http_method='DELETE', name='todo.delete')
-      	def Delete(self,my_model):
-        	ndb.delete_multi([my_model.key])
-          	return my_model
-    
-      	@TodoModel.method(request_fields=('id',), path='todo/{id}', http_method='GET', name='todo.get')
-      	def Get(self, my_model):
-        	if not my_model.from_datastore:
-          	raise endpoints.NotFoundException('MyModel not found.')
-        	return my_model
-    
-      	@TodoModel.query_method(query_fields=('text','limit', 'order', 'pageToken'),path='todo', name='todo.list')
-      	def List(self, query):
-        	return query
-    
-    
-    	application = endpoints.api_server([TodoModelApi], restricted=False)
+	@endpoints.api(name='todoapi', version='v1', description='Todo API')
+	class TodoModelApi(remote.Service):
 
+  	@TodoModel.method(request_fields=('id','text','done'),path='todo', http_method='POST', name='todo.insert')
+  	def Insert(self, my_model):
+    	my_model.put()
+      	return my_model
+
+  	@TodoModel.method(request_fields=('id',),path='todo/{id}', http_method='DELETE', name='todo.delete')
+  	def Delete(self,my_model):
+    	ndb.delete_multi([my_model.key])
+      	return my_model
+
+  	@TodoModel.method(request_fields=('id',), path='todo/{id}', http_method='GET', name='todo.get')
+  	def Get(self, my_model):
+    	if not my_model.from_datastore:
+      	raise endpoints.NotFoundException('MyModel not found.')
+    	return my_model
+
+  	@TodoModel.query_method(query_fields=('text','limit', 'order', 'pageToken'),path='todo', name='todo.list')
+  	def List(self, query):
+    	return query
+
+
+	application = endpoints.api_server([TodoModelApi], restricted=False)
+  ```
 
 
 Lets go over this:
@@ -149,7 +159,8 @@ Lets go over this:
 
   3.  Experimenting With what we have built.  Please run the application and point your browser and the local url/port .  In my case it is localhost:8080/_ah/api/explorer.  This should take you to GAE api explorer.  From here we will be able to test out that our api is working correctly.   
 
-    a.  Go down and click the insert function then file out the form as per the picture below.
+    a.  Go down and click the insert function then fill out the form
+    
     b.  Notice that a request was generated for you
 
     		Http://localhost:8080/_ah/api/todoapi/v1/todo POST 
